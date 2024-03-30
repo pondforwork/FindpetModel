@@ -8,7 +8,6 @@ from sklearn.metrics.pairwise import cosine_similarity
 # Load pre-trained ResNet50 model
 model = ResNet50(weights="imagenet", include_top=False, pooling="avg")
 
-
 # Function to extract features from an image
 def extract_features(img_path, model):
     img = image.load_img(img_path, target_size=(224, 224))
@@ -17,7 +16,6 @@ def extract_features(img_path, model):
     img_data = preprocess_input(img_data)
     features = model.predict(img_data)
     return features.flatten()
-
 
 # Function to calculate similarity between two images based on cosine similarity
 def calculate_similarity(img_features1, img_features2):
@@ -40,12 +38,11 @@ for pet_name in os.listdir(data_dir):
             {"image_path": img_path, "pet_name": pet_name, "features": features}
         )
 
-
 # Create DataFrame from the list of dictionaries
 pet_data = pd.DataFrame(pet_data_list)
 
 # Example user input: path to the desired pet image
-user_input_path = "newwhitecat.jpg"
+user_input_path = "slid.png"
 
 # Extract features for the user input image
 user_input_features = extract_features(user_input_path, model)
@@ -55,8 +52,8 @@ pet_data["similarity"] = pet_data["features"].apply(
     lambda x: calculate_similarity(x, user_input_features)
 )
 
-# Sort database images by similarity and recommend top matches
-recommended_pets = pet_data.sort_values(by="similarity", ascending=False).head(5)
+# Group by pet name and select the row with the highest similarity score
+recommended_pets = pet_data.sort_values(by="similarity", ascending=False).groupby('pet_name').first().reset_index()
 
-print("Top 5 recommended pets:")
+print("Recommended pet for each pet name:")
 print(recommended_pets[["image_path", "pet_name", "similarity"]])
