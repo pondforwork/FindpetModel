@@ -23,20 +23,8 @@ def extract_features(img_path, model):
 def calculate_similarity(img_features1, img_features2):
     return cosine_similarity([img_features1], [img_features2])[0][0]
 
-
 # Path to the directory containing pet images
 data_dir = "dataset"
-
-# Load pet images and their paths into a DataFrame
-# pet_data_list = []
-# for pet_type in os.listdir(data_dir):
-#     pet_type_dir = os.path.join(data_dir, pet_type)
-#     for img_file in os.listdir(pet_type_dir):
-#         img_path = os.path.join(pet_type_dir, img_file)
-#         features = extract_features(img_path, model)
-#         pet_data_list.append(
-#             {"image_path": img_path, "pet_type": pet_type, "features": features}
-#         )
 
 # Load pet images and their paths into a DataFrame
 pet_data_list = []
@@ -57,7 +45,7 @@ for pet_type in os.listdir(data_dir):
 pet_data = pd.DataFrame(pet_data_list)
 
 # Example user input: path to the desired pet image
-user_input_path = "whitecat2.jpeg"
+user_input_path = "newwhitecat.jpg"
 
 # Extract features for the user input image
 user_input_features = extract_features(user_input_path, model)
