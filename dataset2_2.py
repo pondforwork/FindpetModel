@@ -21,18 +21,20 @@ def extract_features(img_path, model):
     img_data = preprocess_input(img_data)
     #ทำนายและเก็บลักษณะเฉพาะของรูปภาพและเก็บไว้ในตัวแปร Features
     features = model.predict(img_data)
-    #แปลงข้อมูลเป็น Array 1 มิติและส่งค่ากลับ
+    #แปลงข้อมูลลักษณะเฉะาพของรูปภาพเป็น Array 1 มิติและส่งค่ากลับ
     return features.flatten()
 
 # Function to calculate similarity between two images based on cosine similarity 
-#คำนวณความเหมือนระหว่าง 2 รูปภาพ
+#คำนวณความเหมือนระหว่าง 2 รูปภาพโดยคำนวณจากค่า array 1 มิติ ที่ได้จากฟังก์ชั่น extract_features
 def calculate_similarity(img_features1, img_features2):
     return cosine_similarity([img_features1], [img_features2])[0][0]
 
 # Path to the directory containing pet images
+#ชื่อโฟลเดอร์เก็บรูปภาพสัตว์เลี้ยงทั้งหมด
 data_dir = "dataset"
 
 # Example user input: path to the desired pet image
+#ชื่อรูปสัตว์เลี้ยงที่มีลักษณะที่ผู้ใช้ต้องการ 
 user_input_path = "slid2.jpg"
 
 # Extract features for the user input image
@@ -40,6 +42,7 @@ user_input_path = "slid2.jpg"
 user_input_features = extract_features(user_input_path, model)
 
 # Load pet images and their paths into a DataFrame
+#สร้าง list เก็บข้อมูลค่าความเหมือนของรูปสัตว์เลี้ยงที่มีอยู่ กับรูปที่ผู้ใช้ส่งเข้ามา
 pet_data_list = []
 
 #วนลูปการเรียกไฟล์ในโฟลเดอร์ Dataset ให้ครบทุกโฟลเดอร์ แต่ละโฟลเดอร์คือที่เก็บรูปภาพของสัตว์แต่ละตัว แต่ละตัวมีได้หลายรูป
@@ -50,11 +53,13 @@ for pet_name in os.listdir(data_dir):
     if pet_name == ".DS_Store":
         continue
     pet_name_dir = os.path.join(data_dir, pet_name)
+    #อ่านต่อตรงนี้
+    #กำหนดค่าความเหมือนต่ำสุดไว้ที่ -1 คือ ไม่เหมือนเลย แปลว่า ค่าจะไม่ต่ำเกินกว่า -1 แต่จะไม่กำหนดค่าสูงสุด เพราะว่ามัน max แค่ 100% หรือ 1 อยู่แล้ว
     max_similarity = -1  # Initialize max similarity for each pet name
     max_img_path = ""    # Initialize image path with max similarity
     #เมื่อเจอโฟลเดอร์แรก จะทำการวนเรียกไฟล์ในโฟลเดอร์อีกครั้ง โดยการเรียกไฟล์คือการเรียกฟังก์ชัน Extract นั่นก็คือแตกข้อมูลของรูปภาพออกมาเป็นอาร์เรย์ 1 มิติ และทำการเปรียบเทียบรูปภาพดังกล่าว
     #กับรูปภาพที่ผู้ใช้ได้ทำการส่งเข้ามา อย่างที่บอกว่า สัตว์แต่ละตัว จะมีได้หลายรูป หลายมุม อาจจะมีรูปที่เหมือนรูปที่ผู้ใช้ใส่มาบ้าง หรือไม่เหมือนบ้างก็มี่ 
-    #เราจึงทำการเลือกออกมา 1 รูป ที่เหมือนที่สุด และเก็บสถิติไว้ใน list
+    #เราจึงทำการเลือกออกมา 1 รูป ที่เหมือนที่สุดของสัตว์ตัวนั้นๆ และเก็บสถิติไว้ใน list
     for img_file in os.listdir(pet_name_dir):
         img_path = os.path.join(pet_name_dir, img_file)
         features = extract_features(img_path, model)
@@ -79,6 +84,6 @@ pet_data = pd.DataFrame(pet_data_list)
 #กำหนดตัวแปรที่เก็บข้อมูล 5 อันดับของสัตว์ที่ได้คะแนนความเหมือนสูงสุด
 top_5_recommended_pets = pet_data.nlargest(5, 'similarity')
 
-#print ค่าที่ Terminal
+#print แสดง5 อันดับสัตว์เลี้ยงที่เหมือนกับรูปที่ผู้ใช้ใส่เข้ามามากที่สุด 
 print("Top 5 recommended pets:")
 print(top_5_recommended_pets[["image_path", "pet_name", "similarity"]])
