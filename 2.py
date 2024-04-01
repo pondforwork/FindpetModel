@@ -1,3 +1,4 @@
+import cv2
 import tkinter as tk
 from tkinter import filedialog
 import numpy as np
@@ -6,6 +7,7 @@ import os
 from keras.preprocessing import image
 from keras.applications.resnet50 import ResNet50, preprocess_input
 from sklearn.metrics.pairwise import cosine_similarity
+from PIL import Image, ImageTk
 
 
 def browse_file():
@@ -57,11 +59,44 @@ def search():
     top_5_recommended_pets = pet_data.nlargest(5, "similarity")
     print("Top 5 recommended pets:")
     print(top_5_recommended_pets[["image_path", "pet_name", "similarity"]])
-    path_list = []
+    show_images(top_5_recommended_pets)
 
-    for index, row in top_5_recommended_pets.iterrows():
-        path_list.append(row["image_path"])
-        print(row["image_path"])
+
+def show_images(top_5_recommended_pets):
+    # Create a frame to hold the labels for the images
+    frame = tk.Frame(root)
+    frame.pack()
+
+    # Load and display each image
+    for i, (_, row) in enumerate(top_5_recommended_pets.iterrows()):
+        # Load the image with OpenCV
+        img = cv2.imread(row["image_path"])
+        # Convert the image from OpenCV format to PIL format
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img_pil = Image.fromarray(img)
+        # Resize the image to fit the window size (optional)
+        img_pil = img_pil.resize((128, 128))  # Adjust the size as needed
+
+        # Create a PhotoImage object from the PIL image
+        img_tk = ImageTk.PhotoImage(img_pil)
+
+        # Create a label widget to display the image
+        label = tk.Label(frame, image=img_tk)
+        label.grid(row=i // 5, column=i % 5)  # Display 5 images per row
+        label.image = img_tk  # Keep a reference to avoid garbage collection
+
+        # Create a label widget to display pet name and similarity percentage
+        pet_label = tk.Label(
+            frame,
+            text=f"{row['pet_name']} ({row['similarity']:.2%} match)",
+            font=("Arial", 10),
+        )
+        pet_label.grid(row=(i // 5) + 1, column=i % 5)  # Display below the image
+
+    # Create a scrollbar for the frame
+    scrollbar = tk.Scrollbar(root, orient="vertical", command=frame.yview)
+    scrollbar.pack(side="right", fill="y")
+    frame.configure(yscrollcommand=scrollbar.set)
 
 
 # Load pre-trained ResNet50 model
@@ -73,7 +108,7 @@ data_dir = "dataset"
 # Create the main application window
 root = tk.Tk()
 root.title("ค้นหาสัตว์เลี้ยง")
-root.geometry("1280x720")  # Set the window size to 1280x720
+root.geometry("1280x900")  # Set the window size to 1280x720
 
 # Create a frame to hold other widgets
 frame = tk.Frame(root)
